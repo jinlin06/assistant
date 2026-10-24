@@ -1,4 +1,4 @@
-# Assistant —— 私人学习助手（Spring Boot 4 + Spring AI + 智谱 GLM）
+# Assistant —— 私人学习助手（Spring Boot 3.3.5 + Spring AI + 智谱 GLM）
 
 一个可插拔大模型的「私人学习助手」后端：统一接入大模型（当前为智谱 GLM），
 提供多用户持久化对话记忆、私有知识库 RAG 检索增强、Agent 工具调用（学习任务 / 日程），
