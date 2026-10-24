@@ -1,9 +1,13 @@
 package org.example.assistant;
 
 import org.example.assistant.agent.StudyTools;
+import org.example.assistant.config.AppTime;
 import org.example.assistant.dashboard.LearningAnalyticsService;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -19,6 +23,7 @@ import java.util.Map;
  * 感知不到底层是 GLM / 通义 / DeepSeek 中的哪一个。
  */
 @RestController
+@Validated
 public class ChatController {
 
     private final ChatClient chatClient;
@@ -35,9 +40,13 @@ public class ChatController {
 
     /**
      * 同步对话。
+     * conversationId 直接使用 userId —— 不同用户的上下文在 PostgreSQL 中绝对隔离，
      * 记忆随取随用，服务重启不丢失。
      */
     @GetMapping("/api/chat")
+    public Map<String, String> chat(
+            @RequestParam @NotBlank @Size(max = 64) String userId,
+            @RequestParam @NotBlank @Size(max = 2000) String message) {
         String answer = chatClient.prompt()
                 .user(message)
                 // 记忆与工具共享用户身份：RAG/记忆按 conversationId 隔离，工具端从 ToolContext 取 userId
@@ -54,6 +63,9 @@ public class ChatController {
 
     /** 流式对话（SSE）：长回答边生成边推送，前端体验更好 */
     @GetMapping(value = "/api/chat/stream", produces = "text/stream;charset=UTF-8")
+    public Flux<String> chatStream(
+            @RequestParam @NotBlank @Size(max = 64) String userId,
+            @RequestParam @NotBlank @Size(max = 2000) String message) {
         return chatClient.prompt()
                 .user(message)
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, userId)
@@ -65,6 +77,7 @@ public class ChatController {
 
     /** 清空某个用户的对话记忆（仪表盘「重置上下文」按钮） */
     @DeleteMapping("/api/chat/memory")
+    public Map<String, String> clearMemory(@RequestParam @NotBlank @Size(max = 64) String userId) {
         chatMemory.clear(userId);
         return Map.of("message", "用户 " + userId + " 的对话记忆已清空");
     }
@@ -74,6 +87,7 @@ public class ChatController {
     public Map<String, String> modelInfo() {
         return Map.of(
                 "provider", "zhipuai",
+                "today", AppTime.today().toString(),
                 "architecture", "Spring AI ChatClient -> 可插拔模型 Starter（当前：智谱 GLM）"
         );
     }

@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * <p>链式装配的三个能力：
  * <ol>
+ *   <li>MessageChatMemoryAdvisor：滑动窗口 20 条的持久化对话记忆（PostgreSQL）；</li>
  *   <li>QuestionAnswerAdvisor：召回私有知识库文档片段（RAG）；</li>
  *   <li>defaultTools：注册 Agent 工具（学习任务 / 日程）。</li>
  * </ol>
@@ -38,7 +39,9 @@ public class ChatClientConfig {
     private static final double RAG_SIMILARITY_THRESHOLD = 0.5;
 
     /**
+     * 对话记忆：MessageWindowChatMemory + 自定义 PostgreSQL ChatMemoryRepository。
      * 只要容器中存在 {@link ChatMemoryRepository} 实现，
+     * MessageChatMemoryAdvisor 就会经由它把上下文持久化到 PostgreSQL。
      */
     @Bean
     public ChatMemory chatMemory(ChatMemoryRepository chatMemoryRepository) {

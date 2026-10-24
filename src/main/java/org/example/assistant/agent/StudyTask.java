@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import org.example.assistant.config.AppTime;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -42,6 +43,7 @@ public class StudyTask {
     private String status = "PENDING";
 
     @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = AppTime.now();
 
     public Long getId() {
         return id;
