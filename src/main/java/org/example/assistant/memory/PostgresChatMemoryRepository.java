@@ -7,11 +7,12 @@ import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 /**
- * 基于 MySQL 的自定义 ChatMemoryRepository。
+ * 基于 PostgreSQL 的自定义 ChatMemoryRepository。
  *
  * <p>摒弃 Spring AI 默认的内存实现（InMemoryChatMemoryRepository），
  * 将对话上下文落库，做到：
@@ -23,11 +24,11 @@ import java.util.List;
  * </ul>
  */
 @Component
-public class MysqlChatMemoryRepository implements ChatMemoryRepository {
+public class PostgresChatMemoryRepository implements ChatMemoryRepository {
 
     private final ChatMessageJpaRepository jpaRepository;
 
-    public MysqlChatMemoryRepository(ChatMessageJpaRepository jpaRepository) {
+    public PostgresChatMemoryRepository(ChatMessageJpaRepository jpaRepository) {
         this.jpaRepository = jpaRepository;
     }
 
@@ -51,8 +52,12 @@ public class MysqlChatMemoryRepository implements ChatMemoryRepository {
      * 注意：ChatMemory 接口语义是「全量覆盖保存」。
      * MessageWindowChatMemory 每次传入的已是窗口裁剪后的完整列表，
      * 因此这里先删后插即可保证数据库中只保留最近 N 条上下文。
+     *
+     * <p>删除 + 插入必须处于同一事务：若删完后插入失败回滚，可避免出现
+     * 「旧记忆已被清空、新记忆又没写进去」导致该用户记忆整体丢失的情况。
      */
     @Override
+    @Transactional
     public void saveAll(String conversationId, List<Message> messages) {
         jpaRepository.deleteByConversationId(conversationId);
         List<ChatMessageEntity> entities = messages.stream()

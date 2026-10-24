@@ -5,6 +5,7 @@ import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.SimpleVectorStore;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -66,7 +67,9 @@ public class DocumentService {
     /** 删除某个文档的全部片段（按 source 元数据过滤） */
     public void deleteBySource(String source) {
         VectorStore store = vectorStoreProvider.getObject();
-        store.delete("source == '" + source + "'");
+        // 使用参数化的 FilterExpression 而非字符串拼接：文件名含引号 / 特殊字符时，
+        // 拼接会破坏过滤表达式甚至被注入，交由 builder 正确转义值。
+        store.delete(new FilterExpressionBuilder().eq("source", source).build());
         persistIfSimple(store);
     }
 

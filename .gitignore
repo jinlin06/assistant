@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### 运行日志 / 本地密钥文件 ###
+*.log
+.env
+.env.*
