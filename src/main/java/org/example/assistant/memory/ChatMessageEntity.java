@@ -8,12 +8,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import org.example.assistant.config.AppTime;
 
 import java.time.LocalDateTime;
 
 /**
- * 对话消息持久化实体（PostgreSQL）。
  * 替代默认的内存式 ChatMemoryRepository，实现重启不丢、多实例共享。
  */
 @Entity
@@ -40,7 +38,6 @@ public class ChatMessageEntity {
     private String content;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = AppTime.now();
 
     public Long getId() {
         return id;

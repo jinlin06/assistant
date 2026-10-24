@@ -1,6 +1,5 @@
 package org.example.assistant.dashboard;
 
-import org.example.assistant.config.AppTime;
 import org.example.assistant.memory.ChatMessageJpaRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -51,18 +50,8 @@ public class DashboardController {
     }
 
     /**
-     * AI 使用趋势折线图：某个用户近 N 天每日提问次数（在 Java 层聚合，不依赖数据库方言）。
-     *
-     * <p>与其他接口保持一致的多用户隔离语义：只统计该 userId 自己的提问，
-     * 不再全库聚合（conversationId = userId）。
      */
-    @GetMapping("/trend/{userId}")
-    public List<Map<String, Object>> trend(@PathVariable String userId,
-                                           @RequestParam(defaultValue = "14") int days) {
-        LocalDateTime since = AppTime.today().minusDays(days - 1L).atStartOfDay();
         Map<LocalDate, Long> counts = new TreeMap<>();
-        chatMessageJpaRepository
-                .findByConversationIdAndRoleAndCreatedAtGreaterThanEqual(userId, "user", since)
                 .forEach(m -> counts.merge(m.getCreatedAt().toLocalDate(), 1L, Long::sum));
         return counts.entrySet().stream()
                 .map(e -> Map.<String, Object>of("date", e.getKey().toString(), "count", e.getValue()))

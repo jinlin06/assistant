@@ -1,10 +1,6 @@
 package org.example.assistant.agent;
 
 import org.springframework.format.annotation.DateTimeFormat;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,7 +18,6 @@ import java.util.List;
  * 与 {@link StudyTools} 共享同一份数据，实现「对话建任务、页面看任务」。
  */
 @RestController
-@Validated
 @RequestMapping("/api/tasks")
 public class TaskController {
 
@@ -43,10 +38,6 @@ public class TaskController {
     }
 
     @PostMapping
-    public StudyTask create(@RequestParam @NotBlank @Size(max = 64) String userId,
-                            @RequestParam @NotBlank @Size(max = 255) String content,
-                            @RequestParam @NotNull
-                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate planDate) {
         StudyTask task = new StudyTask();
         task.setUserId(userId);
         task.setContent(content);
