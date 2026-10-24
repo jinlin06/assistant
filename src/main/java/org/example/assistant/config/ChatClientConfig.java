@@ -1,11 +1,13 @@
 package org.example.assistant.config;
 
 import org.example.assistant.agent.StudyTools;
+import org.example.assistant.memory.ChatMemorySummaryRepository;
+import org.example.assistant.memory.ConversationSummaryService;
+import org.example.assistant.memory.SummarizingChatMemory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -39,16 +41,17 @@ public class ChatClientConfig {
     private static final double RAG_SIMILARITY_THRESHOLD = 0.5;
 
     /**
-     * 对话记忆：MessageWindowChatMemory + 自定义 PostgreSQL ChatMemoryRepository。
-     * 只要容器中存在 {@link ChatMemoryRepository} 实现，
-     * MessageChatMemoryAdvisor 就会经由它把上下文持久化到 PostgreSQL。
+     * 对话记忆：滑动窗口 + 长期记忆摘要的自定义 {@link ChatMemory}，底层落 PostgreSQL。
+     *
+     * <p>相比 Spring AI 内置的 MessageWindowChatMemory（仅保留最近 N 条、旧消息直接丢弃），
+     * {@link SummarizingChatMemory} 在裁剪旧消息时会将其异步压缩成一段长期摘要保留，
+     * 读取上下文时重新注入，做到「近期精确 + 远期概要」。
      */
     @Bean
-    public ChatMemory chatMemory(ChatMemoryRepository chatMemoryRepository) {
-        return MessageWindowChatMemory.builder()
-                .chatMemoryRepository(chatMemoryRepository)
-                .maxMessages(MEMORY_WINDOW_SIZE)
-                .build();
+    public ChatMemory chatMemory(ChatMemoryRepository chatMemoryRepository,
+                                 ChatMemorySummaryRepository summaryRepository,
+                                 ConversationSummaryService summaryService) {
+        return new SummarizingChatMemory(chatMemoryRepository, summaryRepository, summaryService, MEMORY_WINDOW_SIZE);
     }
 
     /** 主对话客户端：记忆 + RAG + Agent 工具 */

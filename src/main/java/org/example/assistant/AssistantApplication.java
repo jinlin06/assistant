@@ -18,9 +18,7 @@ public class AssistantApplication {
     private static final Logger log = LoggerFactory.getLogger(AssistantApplication.class);
 
     public static void main(String[] args) {
-        // 本机可能没有 psql / docker 客户端，这里在 Spring/JPA 初始化之前用 JDBC
-        // 连到 PostgreSQL 维护库 postgres，若业务库 assistant 不存在则自动创建，
-        // 之后 Hibernate ddl-auto=update 负责在该库中建出各模块数据表。
+
         ensureDatabaseExists();
         SpringApplication.run(AssistantApplication.class, args);
     }

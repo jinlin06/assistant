@@ -18,7 +18,10 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "chat_message", indexes = {
-        @Index(name = "idx_conversation_id", columnList = "conversation_id")
+        // 记忆加载按 conversation_id + created_at 排序；趋势按 conversation_id + role + created_at 拉取。
+        // 两个复合索引的最左前缀已覆盖单列 conversation_id 查询。
+        @Index(name = "idx_msg_conv_created", columnList = "conversation_id, created_at"),
+        @Index(name = "idx_msg_conv_role_created", columnList = "conversation_id, role, created_at")
 })
 public class ChatMessageEntity {
 

@@ -18,7 +18,8 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "learning_record", indexes = {
-        @Index(name = "idx_user_id", columnList = "user_id")
+        // 看板按用户 + 时间聚合（雷达图 / 概览 / 趋势）；最左前缀覆盖单列 user_id。
+        @Index(name = "idx_record_user_created", columnList = "user_id, created_at")
 })
 public class LearningRecord {
 

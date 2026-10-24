@@ -66,13 +66,23 @@ public class ChatController {
     public Flux<String> chatStream(
             @RequestParam @NotBlank @Size(max = 64) String userId,
             @RequestParam @NotBlank @Size(max = 2000) String message) {
+        // 边流式推送边累积完整回答，流结束后触发与同步接口一致的异步学情提取，
+        // 保证流式对话同样进入学情看板（extractAndSaveAsync 为 @Async，不阻塞 SSE）
+        StringBuilder answerBuffer = new StringBuilder();
         return chatClient.prompt()
                 .user(message)
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, userId)
                         .param(StudyTools.USER_ID_KEY, userId))
                 .toolContext(Map.of(StudyTools.USER_ID_KEY, userId))
                 .stream()
-                .content();
+                .content()
+                .doOnNext(answerBuffer::append)
+                .doOnComplete(() -> {
+                    String answer = answerBuffer.toString();
+                    if (!answer.isBlank()) {
+                        analyticsService.extractAndSaveAsync(userId, message, answer);
+                    }
+                });
     }
 
     /** 清空某个用户的对话记忆（仪表盘「重置上下文」按钮） */

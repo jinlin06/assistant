@@ -19,8 +19,7 @@ import java.util.List;
  * <ul>
  *   <li>服务重启后记忆不丢失，多实例部署共享上下文；</li>
  *   <li>以 conversationId（= userId）为分区键，不同用户记忆绝对隔离；</li>
- *   <li>配合 {@link org.springframework.ai.chat.memory.MessageWindowChatMemory} 的
- *       滑动窗口策略（最近 20 条）防止 Token 超限。</li>
+ *   <li>配合 {@link SummarizingChatMemory} 的滑动窗口（最近 20 条）+ 长期记忆摘要策略防止 Token 超限。</li>
  * </ul>
  */
 @Component
@@ -49,8 +48,8 @@ public class PostgresChatMemoryRepository implements ChatMemoryRepository {
     }
 
     /**
-     * 注意：ChatMemory 接口语义是「全量覆盖保存」。
-     * MessageWindowChatMemory 每次传入的已是窗口裁剪后的完整列表，
+     * 注意：ChatMemoryRepository 接口语义是「全量覆盖保存」。
+     * 上层 {@link SummarizingChatMemory} 每次传入 saveAll 的已是窗口裁剪后的完整列表，
      * 因此这里先删后插即可保证数据库中只保留最近 N 条上下文。
      *
      * <p>删除 + 插入必须处于同一事务：若删完后插入失败回滚，可避免出现

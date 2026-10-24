@@ -18,7 +18,10 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "study_task", indexes = {
-        @Index(name = "idx_task_user_id", columnList = "user_id")
+        // 高频查询均为组合条件；(user_id, plan_date) 的最左前缀已覆盖单列 user_id 查询，
+        // 故不再单建 user_id 索引，避免冗余。
+        @Index(name = "idx_task_user_plan", columnList = "user_id, plan_date"),
+        @Index(name = "idx_task_user_status_plan", columnList = "user_id, status, plan_date")
 })
 public class StudyTask {
 
